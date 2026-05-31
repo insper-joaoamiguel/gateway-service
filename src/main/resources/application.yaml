@@ -39,9 +39,8 @@ spring:
 management:
   endpoints:
     web:
-      base-path: /gateway/actuator
       exposure:
-        include: ['prometheus']
+        include: health
 
 logging:
   level:
