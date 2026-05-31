@@ -1,25 +1,24 @@
 # ─── Stage 1: Build ───────────────────────────────────────────────────────────
-FROM maven:3.9-eclipse-temurin-21 AS build
+FROM maven:3.9-eclipse-temurin-25 AS build
 
 WORKDIR /app
 
 COPY pom.xml .
-RUN mvn dependency:go-offline -B
+RUN mvn --no-transfer-progress dependency:go-offline -B || true
 
 COPY src ./src
-RUN mvn package -DskipTests -B
+RUN mvn --no-transfer-progress package -DskipTests -B
 
 # ─── Stage 2: Runtime ─────────────────────────────────────────────────────────
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:25-jre
 
 WORKDIR /app
 
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+RUN groupadd -r appgroup && useradd -r -g appgroup appuser
 USER appuser
 
 COPY --from=build /app/target/*.jar app.jar
 
-# Gateway é o ponto de entrada — porta pública da aplicação
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "--enable-preview", "-jar", "app.jar"]
